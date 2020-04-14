@@ -18,62 +18,52 @@ import java.util.List;
 public class GetRequest {
     private CloseableHttpResponse response;
     private CloseableHttpClient client;
-    private StringBuilder url = new StringBuilder();
+    private HttpGet get;
+    private StringBuilder url;
     private StringBuilder jsonBody;
 
-    public GetRequest shouldReturn200(String url) throws IOException {
+
+    public GetRequest toThisUrl(String url){
+        this.url = new StringBuilder();
         this.url.append(url);
-        client = buildClient();
-        HttpGet get = new HttpGet(url);
-        CloseableHttpResponse response = client.execute(get);
-
-        Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
-        System.out.printf("URL: %s, code: 200\n", url);
-        response.close();
-
+        System.out.printf("Sending GET request to the URL: %s\n", this.url.toString());
         return this;
     }
+
 
     public GetRequest shouldReturn200() throws IOException {
-        client = buildClient();
-        HttpGet get = new HttpGet(this.url.toString());
-        CloseableHttpResponse response = client.execute(get);
+        setup();
 
         Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
-        System.out.printf("URL: %s, code: 200\n", this.url.toString());
+        System.out.println("Received code: 200 ('OK')\n");
         response.close();
 
         return this;
     }
 
 
-    public void shouldReturn404(String url) throws IOException {
+    public GetRequest shouldReturn401() throws IOException {
+        setup();
 
-        client = buildClient();
-        HttpGet get = new HttpGet(url);
-        CloseableHttpResponse response = client.execute(get);
-
-        Assert.assertEquals(response.getStatusLine().getStatusCode(), 404);
-        System.out.printf("URL: %s, code: 404 ('Page Not Found')\n", url);
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 401);
+        System.out.println("Received code: 401 ('Not Authorized')\n");
         response.close();
+
+        return this;
     }
+
 
     public void shouldReturn404() throws IOException {
-
-        client = buildClient();
-        HttpGet get = new HttpGet(this.url.toString());
-        CloseableHttpResponse response = client.execute(get);
+        setup();
 
         Assert.assertEquals(response.getStatusLine().getStatusCode(), 404);
-        System.out.printf("URL: %s, code: 404 ('Page Not Found')\n", this.url.toString());
+        System.out.println("Received code: 404 ('Not Found')\n");
         response.close();
     }
 
-    public GetRequest shouldHaveHeader(String headerName) throws IOException {
-        client = buildClient();
 
-        HttpGet get = new HttpGet(this.url.toString());
-        response = client.execute(get);
+    public GetRequest shouldHaveHeader(String headerName) throws IOException {
+        setup();
 
         String actualHeader = Arrays.stream(response.getAllHeaders())
                 .filter(header -> headerName.equalsIgnoreCase(header.getName()))
@@ -88,32 +78,11 @@ public class GetRequest {
         return this;
     }
 
-    public GetRequest shouldHaveHeader(String url, String headerName) throws IOException {
-        client = buildClient();
-
-        HttpGet get = new HttpGet(url);
-        response = client.execute(get);
-
-        String actualHeader = Arrays.stream(response.getAllHeaders())
-                .filter(header -> headerName.equalsIgnoreCase(header.getName()))
-                .findFirst()
-                .orElseThrow(()-> new RuntimeException("No header found: " + headerName))
-                .getName();
-
-        Assert.assertEquals(actualHeader.toLowerCase(), headerName.toLowerCase());
-        System.out.printf("URL: %s\nHeader: %s, status: found\n", url, headerName);
-        response.close();
-
-        return this;
-    }
 
     public GetRequest shouldHaveHeaders(String ...headersNames) throws IOException {
-        client = buildClient();
+        setup();
 
-        HttpGet get = new HttpGet(this.url.toString());
-        response = client.execute(get);
-
-        Arrays.stream(response.getAllHeaders())
+        Arrays.stream(this.response.getAllHeaders())
                  .forEach(header ->
                          Arrays.asList(headersNames).contains(header));
 
@@ -127,11 +96,6 @@ public class GetRequest {
         return this;
     }
 
-    public GetRequest toThisUrl(String url){
-        this.url.append(url);
-        return this;
-    }
-
 
     private static CloseableHttpClient buildClient() {
         return HttpClientBuilder.create().build();
@@ -141,8 +105,7 @@ public class GetRequest {
     public void returnJsonBody() throws IOException {
         jsonBody = new StringBuilder();
         client = buildClient();
-
-        HttpGet get = new HttpGet(this.url.toString());
+        get = new HttpGet(this.url.toString());
         response = client.execute(get);
 
         System.out.println(EntityUtils.toString(this.response.getEntity()).replace("[","").replace("]",""));
@@ -153,8 +116,7 @@ public class GetRequest {
     public GetRequest getJson() throws IOException {
         jsonBody = new StringBuilder();
         client = buildClient();
-
-        HttpGet get = new HttpGet(this.url.toString());
+        get = new HttpGet(this.url.toString());
         this.response = client.execute(get);
         this.jsonBody.append(EntityUtils.toString(this.response.getEntity())
                 .replace("[","")
@@ -163,17 +125,17 @@ public class GetRequest {
         return this;
     }
 
-    public <T> T bindJsonToClass() throws IOException {
-        return new ObjectMapper().readValue(EntityUtils.toString(this.response.getEntity()), new TypeReference<T>() {
-        });
-    }
-
-    public Object getValueFor(String key){
-        JSONObject jsonObject = new JSONObject(this.jsonBody.toString());
-//        System.out.println(jsonObject.keySet());
-        return jsonObject.get(key);
-
-    }
+//    public <T> T bindJsonToClass() throws IOException {
+//        return new ObjectMapper().readValue(EntityUtils.toString(this.response.getEntity()), new TypeReference<T>() {
+//        });
+//    }
+//
+//    public Object getValueFor(String key){
+//        JSONObject jsonObject = new JSONObject(this.jsonBody.toString());
+////        System.out.println(jsonObject.keySet());
+//        return jsonObject.get(key);
+//
+//    }
 
     public <T> T unmarshall(Class<T> classToMap) throws IOException {
         return new ObjectMapper()
@@ -181,10 +143,17 @@ public class GetRequest {
                 .readValue(this.jsonBody.toString(), classToMap);
     }
 
-    public <T> List<T> boom() throws IOException {
-        return new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .readValue(EntityUtils.toString(response.getEntity()), new TypeReference<List<T>>() {});
+//    public <T> List<T> boom() throws IOException {
+//        return new ObjectMapper()
+//                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+//                .readValue(EntityUtils.toString(response.getEntity()), new TypeReference<List<T>>() {});
+//    }
+
+    private void setup() throws IOException {
+        this.client = buildClient();
+        this.get = new HttpGet(this.url.toString());
+        this.response = this.client.execute(this.get);
+
     }
 
 }
