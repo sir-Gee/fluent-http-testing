@@ -1,6 +1,15 @@
 import response.GetRequest;
 import response.PostRequest;
 
+/**
+ * Copy to your pom.xml:
+ *         <dependency>
+ *             <groupId>org.apache.httpcomponents</groupId>
+ *             <artifactId>httpclient</artifactId>
+ *             <version>4.5.2</version>
+ *         </dependency>
+*/
+
 public class Requests {
     private GetRequest getRequest;
     private PostRequest postRequest;

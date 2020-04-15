@@ -41,6 +41,34 @@ public class GetRequest {
         return this;
     }
 
+    public GetRequest shouldReturn204() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 204);
+        System.out.println("Received code: 204 ('No Content')\n");
+        response.close();
+
+        return this;
+    }
+
+    public GetRequest shouldReturn304() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 304);
+        System.out.println("Received code: 304 ('Not Modified')\n");
+        response.close();
+
+        return this;
+    }
+
+
+    public void shouldReturn400() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 400);
+        System.out.println("Received code: 400 ('Bad Request')\n");
+        response.close();
+    }
 
     public GetRequest shouldReturn401() throws IOException {
         setup();
@@ -52,12 +80,70 @@ public class GetRequest {
         return this;
     }
 
+    public GetRequest shouldReturn402() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 402);
+        System.out.println("Received code: 402 ('Payment Required')\n");
+        response.close();
+
+        return this;
+    }
+
+    public void shouldReturn403() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 403);
+        System.out.println("Received code: 403 ('Forbidden')\n");
+        response.close();
+    }
+
 
     public void shouldReturn404() throws IOException {
         setup();
 
         Assert.assertEquals(response.getStatusLine().getStatusCode(), 404);
         System.out.println("Received code: 404 ('Not Found')\n");
+        response.close();
+    }
+
+    public void shouldReturn405() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 405);
+        System.out.println("Received code: 405 ('Method Not Allowed')\n");
+        response.close();
+    }
+
+    public void shouldReturn408() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 408);
+        System.out.println("Received code: 408 ('Request Timeout')\n");
+        response.close();
+    }
+
+    public void shouldReturn500() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 500);
+        System.out.println("Received code: 500 ('Internal Server Error')\n");
+        response.close();
+    }
+
+    public void shouldReturn501() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 501);
+        System.out.println("Received code: 501 ('Not Implemented')\n");
+        response.close();
+    }
+
+    public void shouldReturn502() throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), 502);
+        System.out.println("Received code: 502 ('Bad Gateway')\n");
         response.close();
     }
 
@@ -123,6 +209,10 @@ public class GetRequest {
                 .replace("]",""));
 
         return this;
+    }
+
+    public CloseableHttpResponse returnJson(){
+        return this.response;
     }
 
 //    public <T> T bindJsonToClass() throws IOException {
