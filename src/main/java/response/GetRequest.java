@@ -202,6 +202,27 @@ public class GetRequest {
         return this;
     }
 
+    public GetRequest headerShouldHaveValue(String headerName, String expectedHeaderValue){
+        System.out.println("Looking for the header - " + headerName + " : " + expectedHeaderValue);
+        StringBuilder builder = new StringBuilder("Found - ");
+        StringBuilder actualHeaderValue = new StringBuilder();
+
+        Arrays.stream(this.response.getAllHeaders())
+                .filter(header -> header.getName().equalsIgnoreCase(headerName))
+                .forEach(header -> {
+                    if(header.getValue().contains(expectedHeaderValue)){
+                        builder.append(headerName + " : " + expectedHeaderValue);
+                        actualHeaderValue.append(header.getValue(), 0, expectedHeaderValue.length());
+                    }
+                });
+
+                Assert.assertEquals(actualHeaderValue.toString(), expectedHeaderValue);
+
+        System.out.println(builder.toString());
+
+        return this;
+    }
+
 
     public void returnJsonBody() throws IOException {
         jsonBody = new StringBuilder();
