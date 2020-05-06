@@ -1,19 +1,26 @@
 package response;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 import org.testng.Assert;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static response.BaseRequest.buildClient;
+import static response.BaseRequest.checkGeneric;
+import static response.BaseRequest.toThisUrlGen;
 
 public class GetRequest {
     private CloseableHttpResponse response;
@@ -21,7 +28,8 @@ public class GetRequest {
     private HttpGet get;
     private StringBuilder url;
     private StringBuilder jsonBody;
-
+    private StringBuilder headerName;
+    private StringBuilder headerValue;
 
     public GetRequest toThisUrl(String url){
         this.url = new StringBuilder();
@@ -30,6 +38,14 @@ public class GetRequest {
         return this;
     }
 
+    public GetRequest addHeader(String name, String value){
+        headerName = new StringBuilder(name);
+        headerValue = new StringBuilder(value);
+
+//        toThisUrlGen(new GetRequest(), url);
+        System.out.printf("Added header: name - %s, value - %s\n", headerName.toString(), headerValue.toString());
+        return this;
+    }
 
     public GetRequest shouldReturn200() throws IOException {
         setup();
@@ -147,7 +163,6 @@ public class GetRequest {
         response.close();
     }
 
-
     public GetRequest shouldHaveHeader(String headerName) throws IOException {
         setup();
 
@@ -168,23 +183,23 @@ public class GetRequest {
     public GetRequest shouldHaveHeaders(String ...headersNames) throws IOException {
         setup();
 
-        Arrays.stream(this.response.getAllHeaders())
-                 .forEach(header ->
-                         Arrays.asList(headersNames).contains(header));
+        List findHeadersLowerCase = Arrays.stream(headersNames)
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
 
-        StringBuilder builder = new StringBuilder("These headers exist:\n");
-        Arrays.stream(headersNames)
-                .forEach(name -> builder.append(name + "\n"));
+        StringBuilder builder = new StringBuilder("Headers found:\n");
+
+        Arrays.stream(this.response.getAllHeaders())
+                 .forEach(header -> {
+                     if(findHeadersLowerCase.contains(header.getName().toLowerCase())) {
+                         builder.append(header.getName() + "\n");
+                     }
+                 });
 
         System.out.println(builder.toString());
         response.close();
 
         return this;
-    }
-
-
-    private static CloseableHttpClient buildClient() {
-        return HttpClientBuilder.create().build();
     }
 
 
@@ -240,10 +255,12 @@ public class GetRequest {
 //    }
 
     private void setup() throws IOException {
-        this.client = buildClient();
+        this.client = HttpClientBuilder.create().build();
         this.get = new HttpGet(this.url.toString());
+        if(this.headerName != null){
+            this.get.addHeader(this.headerName.toString(), this.headerValue.toString());
+        }
         this.response = this.client.execute(this.get);
-
     }
 
 }
