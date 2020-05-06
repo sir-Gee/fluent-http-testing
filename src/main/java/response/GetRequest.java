@@ -183,18 +183,27 @@ public class GetRequest {
     public GetRequest shouldHaveHeaders(String ...headersNames) throws IOException {
         setup();
 
-        List findHeadersLowerCase = Arrays.stream(headersNames)
+        List <String> findHeadersLowerCase = Arrays.stream(headersNames)
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
 
         StringBuilder builder = new StringBuilder("Headers found:\n");
 
-        Arrays.stream(this.response.getAllHeaders())
-                 .forEach(header -> {
-                     if(findHeadersLowerCase.contains(header.getName().toLowerCase())) {
-                         builder.append(header.getName() + "\n");
-                     }
-                 });
+        List foundHeaders = Arrays.stream(this.response.getAllHeaders())
+                .map(Header::getName)
+                .filter(findHeadersLowerCase::contains)
+                .collect(Collectors.toList());
+
+        findHeadersLowerCase
+                .forEach(header -> {
+                    if(foundHeaders.contains(header)){
+                        builder.append(header+ "\n");
+                    }
+                    else {
+                        throw new RuntimeException(header + " not found");
+                    }
+                });
+
 
         System.out.println(builder.toString());
         response.close();
