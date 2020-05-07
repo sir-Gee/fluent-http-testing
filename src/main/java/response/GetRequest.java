@@ -10,6 +10,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.testng.Assert;
+import util.StatusCodes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +53,16 @@ public class GetRequest {
 
         Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
         System.out.println("Received code: 200 ('OK')\n");
+        response.close();
+
+        return this;
+    }
+
+    public GetRequest shouldReturnStatusCode(int statusCode) throws IOException {
+        setup();
+
+        Assert.assertEquals(response.getStatusLine().getStatusCode(), statusCode);
+        System.out.println(StatusCodes.getStatusCode(statusCode));
         response.close();
 
         return this;
